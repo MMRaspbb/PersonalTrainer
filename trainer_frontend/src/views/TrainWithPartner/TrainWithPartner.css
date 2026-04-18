@@ -4,6 +4,44 @@
     justify-content: center;
     align-items: center;
     height: 100vh;
+    gap: 24px; /* Creates spacing between feedback, camera, and button */
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* 💬 feedback - Now an outlined box above the camera */
+.feedback-box {
+    width: 100%;
+    max-width: 800px;
+    padding: 16px;
+    border: 2px solid #9BC4BC; /* Color matched to your button */
+    border-radius: 14px;
+    font-size: 20px;
+    font-weight: 600;
+    text-align: center;
+    color: inherit;
+    background-color: transparent;
+
+    /* Add this transition so it smoothly recovers when the error clears */
+    transition: all 0.3s ease;
+}
+
+/* 🚨 NEW: Flashing Error State */
+.error-flash {
+    animation: flashRed 0.8s infinite alternate;
+}
+
+@keyframes flashRed {
+    0% {
+        border-color: #ef4444; /* Bright Red */
+        background-color: rgba(239, 68, 68, 0.05); /* Very faint red tint */
+        color: #ef4444;
+    }
+    100% {
+        border-color: #b91c1c; /* Darker Red */
+        background-color: rgba(239, 68, 68, 0.25); /* Stronger red tint */
+        color: #b91c1c;
+    }
 }
 
 /* 📷 wrapper */
@@ -11,62 +49,75 @@
     position: relative;
     width: 100%;
     max-width: 800px;
+    border-radius: 14px;
 }
 
-/* 💬 feedback */
-.feedback {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-
-    background: rgba(0, 0, 0, 0.6);
-    color: white;
-
-    padding: 10px 15px;
-    border-radius: 10px;
-    font-size: 18px;
-}
-
-/* 🔢 reps + timer */
 .reps-time {
     position: absolute;
-    bottom: 20px;
-    left: 20px;
+    top: 0;   /* Removed the 20px offset */
+    left: 0;  /* Removed the 20px offset */
 
-    background: rgba(0, 0, 0, 0.6);
-    color: white;
+    background: #ffffff; /* Fully solid white background */
+    color: #090909;      /* Dark text so it's visible on white */
 
-    padding: 10px 15px;
-    border-radius: 10px;
+    padding: 12px 20px;
+
+    /* Rounds only the bottom-right corner for a clean look */
+    border-radius: 0 0 15px 0;
+
     font-size: 20px;
+    font-weight: 600;    /* Made it a bit bolder to look good on white */
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 10;         /* Ensures it stays completely above the video */
+}
+
+/* 🎯 Goal - Upper Right Flush */
+.goal-box {
+    position: absolute;
+    top: 0;    /* Removed the 20px offset */
+    right: 0;  /* Removed the 20px offset */
+
+    background: #ffffff; /* Fully solid white background */
+    color: #090909;      /* Dark text so it's visible on white */
+
+    padding: 12px 20px;
+
+    /* Rounds only the bottom-left corner */
+    border-radius: 0 0 0 14px;
+
+    font-size: 20px;
+    font-weight: 600;
+    z-index: 10;         /* Ensures it stays completely above the video */
 }
 
 .startButton {
     width: 380px;
     height: 56px;
 
-    background-color: #9BC4BC !important;
-    color: #090909 !important;
+    /* 🌊 Vibrant Teal: Pops beautifully on a white/light background */
+    background-color: #14B8A6 !important;
+
+    /* White text for maximum readability inside the teal button */
+    color: #FFFFFF !important;
 
     font-size: 16px !important;
     font-weight: 600 !important;
-
     border-radius: 14px !important;
-
-    /* IMPORTANT: override MUI elevation shadow */
     box-shadow: none !important;
-
     transition: all 0.25s ease !important;
 }
 
 /* hover state */
 .startButton:hover {
-    background-color: #8DDBE0 !important;
+    /* Slightly darker teal for the hover state */
+    background-color: #0D9488 !important;
 
     transform: translateY(-2px) scale(1.02);
 
-    box-shadow:
-            0 10px 25px rgba(141, 219, 224, 0.25) !important;
+    /* Colored shadow matching the button to give it that premium feel */
+    box-shadow: 0 10px 25px rgba(20, 184, 166, 0.35) !important;
 }
 
 /* optional active press effect */

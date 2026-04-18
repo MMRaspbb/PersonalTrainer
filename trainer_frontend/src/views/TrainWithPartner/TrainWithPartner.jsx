@@ -1,8 +1,8 @@
 import CameraView from "../../components/CameraView/CameraView.jsx";
-import {Box, Button} from "@mui/material";
+import { Box, Button } from "@mui/material";
 import "./TrainWithPartner.css";
-import {useEffect, useState} from "react";
-import {useParams} from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 
 const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -12,19 +12,21 @@ const formatTime = (seconds) => {
 };
 
 export default function TrainWithPartner() {
-    const {exercise} = useParams();
+    const { exercise } = useParams();
 
     const [timestamp, setTimestamp] = useState(0);
     const [inProgress, setInProgress] = useState(false);
 
-    // 1. Add state for the dynamic data you want to receive
     const [reps, setReps] = useState(0);
-    const [feedback, setFeedback] = useState("🟢 Waiting for data...");
+    const [feedback, setFeedback] = useState("Wciśnij start aby rozpocząć");
 
     const startStop = () => {
         if (!inProgress) {
             setTimestamp(0);
-            setReps(0); // Optional: reset reps on start
+            setReps(0);
+        }
+        else{
+            setFeedback("Wciśnij start aby rozpocząć")
         }
         setInProgress(prev => !prev);
     };
@@ -45,11 +47,9 @@ export default function TrainWithPartner() {
         };
     }, [inProgress]);
 
-    // 2. Create a handler for incoming WebSocket data
     const handleSocketData = (data) => {
-        // Backend wysyła 'rep_count', a nie 'reps'!
-        if (data.rep_count !== undefined) {
-            setReps(data.rep_count);
+        if (data.reps !== undefined) {
+            setReps(data.reps);
         }
         if (data.feedback !== undefined) {
             setFeedback(data.feedback);
@@ -58,6 +58,14 @@ export default function TrainWithPartner() {
 
     return (
         <Box className="train-with-partner">
+            {/* 1. Feedback Box - Conditionally add "error-flash" class */}
+            <Box
+                className={`feedback-box ${feedback.includes("Nie wykryto postaci") ? "error-flash" : ""}`}
+            >
+                {feedback}
+            </Box>
+
+            {/* 2. Camera Container */}
             <Box className="camera-container">
                 <CameraView
                     exercise={exercise}
@@ -65,14 +73,20 @@ export default function TrainWithPartner() {
                     inProgress={inProgress}
                     onDataReceived={handleSocketData}
                 />
-                e
-                <Box className="feedback">{feedback}</Box>
 
+                {/* Score & Time */}
                 <Box className="reps-time">
-                    <p>Reps: {reps}</p>
-                    <p>{formatTime(timestamp)}</p>
+                    <p style={{ margin: 0 }}>Score: {reps}</p>
+                    <p style={{ margin: 0 }}>{formatTime(timestamp)}</p>
+                </Box>
+
+                {/* Goal */}
+                <Box className="goal-box">
+                    <p style={{ margin: 0 }}>Goal: 10</p>
                 </Box>
             </Box>
+
+            {/* 3. Button Container */}
             <Box>
                 <Button variant="outlined" className="startButton" onClick={startStop}>
                     {inProgress ? 'Stop' : 'Start'}

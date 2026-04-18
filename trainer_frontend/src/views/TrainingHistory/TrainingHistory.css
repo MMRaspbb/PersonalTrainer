@@ -1,0 +1,101 @@
+/* full screen centering matching established page structure */
+.training-history-container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: #ffffff; /* Solid white background as established */
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* 🌙 Deep Slate: Established header style with 1px letter spacing */
+.history-title {
+    color: #1E293B !important;
+    font-size: 24px !important;
+    font-weight: 700 !important;
+    letter-spacing: 1px;
+    margin-bottom: 30px !important; /* Space above the card */
+}
+
+/* MAIN CARD (Light mode glass/clean look) matching the established .menuCard shadow/layout */
+.history-card {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 900px; /* Increased slightly for table layout */
+    padding: 30px; /* Adjusted padding for internal spacing */
+    border-radius: 24px !important; /* Matches established main card radius */
+
+    /* 🤍 Translucent white for a light glass effect */
+    background: rgba(255, 255, 255, 0.85) !important;
+
+    /* Subtle tinted border to define the edge cleanly */
+    border: 1px solid rgba(20, 184, 166, 0.2) !important;
+
+    /* 🌑 Soft, dark shadows replace the light glows, as established */
+    box-shadow:
+            0 10px 40px rgba(0, 0, 0, 0.06),
+            0 0 2px rgba(0, 0, 0, 0.04) !important;
+
+    backdrop-filter: blur(14px);
+    z-index: 1;
+}
+
+/* MUI Table Overrides to match slate typography established earlier */
+.table-header {
+    color: #1E293B !important; /* established slate color */
+    font-weight: 700 !important;
+    font-size: 16px !important;
+    border-bottom: 2px solid rgba(20, 184, 166, 0.2) !important;
+}
+
+.table-data {
+    color: #1E293B !important; /* established slate color */
+    font-weight: 400 !important;
+    font-size: 16px !important;
+    border-bottom: 1px solid rgba(20, 184, 166, 0.1) !important;
+}
+
+/* Button container to position it established within the card flow */
+.action-button-container {
+    display: flex;
+    justify-content: flex-end; /* Align to bottom right */
+    width: 100%;
+    margin-top: 30px; /* Space below table */
+}
+
+/* BUTTONS (MUI override-safe) designed to match the primary .homeButton style */
+.backHomeButton {
+    min-width: 180px; /* established standard width, adjusted slightly for table context */
+    height: 56px;
+
+    /* 🌊 Vibrant Teal: Pops beautifully on white/light background, as established */
+    background-color: #14B8A6 !important;
+
+    /* White text for maximum readability inside the teal button, as established */
+    color: #FFFFFF !important;
+
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    border-radius: 14px !important;
+    box-shadow: none !important;
+    transition: all 0.25s ease !important;
+}
+
+/* hover state matching the established transition and premium feel */
+.backHomeButton:hover {
+    /* established slightly darker teal for the hover state */
+    background-color: #0D9488 !important;
+
+    transform: translateY(-2px) scale(1.02);
+
+    /* colored shadow matching the button to give it that premium feel, as established */
+    box-shadow: 0 10px 25px rgba(20, 184, 166, 0.35) !important;
+}
+
+/* optional active press effect established previously */
+.backHomeButton:active {
+    transform: scale(0.98);
+}

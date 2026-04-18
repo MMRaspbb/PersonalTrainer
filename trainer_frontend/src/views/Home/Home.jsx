@@ -16,7 +16,7 @@ export default function Home() {
                     Rozpocznij Ćwiczenia
                 </Button>
 
-                <Button variant="contained" className="homeButton">
+                <Button variant="contained" className="homeButton" onClick={() => navigate("/history")}>
                     Historia Ćwiczeń
                 </Button>
 
