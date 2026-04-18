@@ -1,56 +1,67 @@
 import { useEffect, useRef } from "react";
 
-export default function CameraView() {
+export default function CameraView({exercise, timestamp, inProgress}) {
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const socketRef = useRef(null);
 
+    // 1. Create refs for props that change frequently
+    const timestampRef = useRef(timestamp);
+    const exerciseRef = useRef(exercise);
+
+    // 2. Keep the refs synced with the latest props
+    useEffect(() => {
+        timestampRef.current = timestamp;
+        exerciseRef.current = exercise;
+    }, [timestamp, exercise]);
+
+    // WebSocket setup
     useEffect(() => {
         const socket = new WebSocket("ws://localhost:8000/ws");
         socket.binaryType = "arraybuffer";
 
-        socket.onopen = () => {
-            console.log("WS connected");
-        };
-
-        socket.onclose = () => {
-            console.log("WS closed");
-        };
-
-        socket.onerror = (err) => {
-            console.error("WS error", err);
-        };
+        socket.onopen = () => console.log("WS connected");
+        socket.onclose = () => console.log("WS closed");
+        socket.onerror = (err) => console.error("WS error", err);
 
         socketRef.current = socket;
 
         return () => socket.close();
     }, []);
 
-    // 📷 Kamera
+    // 📷 Camera setup
     useEffect(() => {
         async function startCamera() {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { width: 640, height: 480 },
-                audio: false,
-            });
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: 640, height: 480 },
+                    audio: false,
+                });
 
-            if (videoRef.current) {
-                videoRef.current.srcObject = stream;
+                if (videoRef.current) {
+                    videoRef.current.srcObject = stream;
+                }
+            } catch (err) {
+                console.error("Camera access denied or unavailable", err);
             }
         }
 
         startCamera();
     }, []);
 
-    // 🎥 Capture + send
+    // 🚀 Corrected Data Sending Logic
     useEffect(() => {
+        // If training is not in progress, don't even start the interval.
+        // This is much better for performance than running an empty interval.
+        if (!inProgress) return;
+
         const interval = setInterval(() => {
             const video = videoRef.current;
             const canvas = canvasRef.current;
             const socket = socketRef.current;
 
             if (!video || !canvas || !socket) return;
-            if (socket.readyState !== 1) return;
+            if (socket.readyState !== 1) return; // 1 means OPEN
             if (video.videoWidth === 0) return;
 
             const ctx = canvas.getContext("2d");
@@ -60,20 +71,34 @@ export default function CameraView() {
 
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // 🔥 TU KLUCZ: Blob zamiast base64
-            canvas.toBlob(
-                (blob) => {
-                    if (blob) {
-                        socket.send(blob);
-                    }
-                },
-                "image/jpeg",
-                0.7 // jakość (0–1)
-            );
-        }, 100); // ~10 FPS
+            canvas.toBlob((blob) => {
+                if (!blob) return;
 
+                const reader = new FileReader();
+
+                reader.onloadend = () => {
+                    const payload = {
+                        frame: reader.result,
+                        // Use the refs here to avoid stale closures without
+                        // having to restart the interval every second!
+                        timestamp: timestampRef.current,
+                        exercise: exerciseRef.current
+                    };
+
+                    socket.send(JSON.stringify(payload));
+                    console.log(payload)
+                };
+
+                reader.readAsDataURL(blob);
+
+            }, "image/jpeg", 0.7);
+
+        }, 100);
+
+        // Cleanup: automatically clears the interval when inProgress becomes false
         return () => clearInterval(interval);
-    }, []);
+
+    }, [inProgress]); // Reacting ONLY to inProgress changes
 
     return (
         <div style={{ width: "100%", maxWidth: "1000px" }}>
@@ -83,7 +108,6 @@ export default function CameraView() {
                 playsInline
                 style={{ width: "100%", height: "auto" }}
             />
-
             <canvas ref={canvasRef} style={{ display: "none" }} />
         </div>
     );
