@@ -1,6 +1,7 @@
 from ..abstract.base_exercise import BaseExercise
 from ..math_engine import calculate_angle, get_distance
 from ..feedback_handler import FeedbackManager
+from ..parameters import ParametersManager, ExerciseType
 from typing import Tuple, Dict, Any
 import time
 
@@ -11,20 +12,40 @@ class PushupCounter(BaseExercise):
 
     Klasa monitoruje pracę ramion, sprawdza prostowę pleców
     i generuje informacje zwrotne w czasie rzeczywistym.
+
+    Parametry są pobierane automatycznie z ParametersManager.
     """
 
     def __init__(self):
-        """Inicjalizuje licznik pompek z progami dla różnych faz ruchu."""
-        super().__init__(threshold_down=90.0, threshold_up=160.0)
+        """Inicjalizuje licznik pompek z parametrami z ParametersManager"""
+        # Inicjalizuj parent z exercise_type aby pobrać parametry
+        super().__init__(exercise_type=ExerciseType.PUSHUP)
+
         self.fm = FeedbackManager()
         self.feedback = self.fm.get("pushup", "start")
         self.arm_angle = 0.0
         self.body_angle = 0.0
         self._body_hidden_warned = False
-        # Cooldown dla feedback'u
+
+        # Pobierz parametry z ParametersManager
+        params = ParametersManager.get_parameters(ExerciseType.PUSHUP)
+        self._feedback_cooldown = params.feedback.cooldown_seconds
         self._last_feedback_time = 0.0
         self._last_feedback_message = ""
-        self._feedback_cooldown = 1.0  # 1 sekundy między powiadomieniami
+
+        # Custom parametry dla pompek
+        self._arm_width_min = ParametersManager.get_custom_param(
+            ExerciseType.PUSHUP, "arm_width_min", 1.0
+        )
+        self._arm_width_max = ParametersManager.get_custom_param(
+            ExerciseType.PUSHUP, "arm_width_max", 1.8
+        )
+        self._body_alignment_tolerance = ParametersManager.get_custom_param(
+            ExerciseType.PUSHUP, "body_alignment_tolerance", 20.0
+        )
+        self._min_arm_symmetry = ParametersManager.get_custom_param(
+            ExerciseType.PUSHUP, "min_arm_symmetry", 0.8
+        )
 
     def _validate_visible_points(self, points: Dict[str, Any], required_keys: list) -> Tuple[bool, str]:
         """
