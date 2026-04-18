@@ -18,5 +18,6 @@ class BaseExercise(ABC):
         return rep_completed
 
     @abstractmethod
-    def update(self, *args, **kwargs):
+    def update(self, points):
+        """Metoda przyjmuje słownik punktów i zwraca (counter, stage, angle, feedback)."""
         pass
