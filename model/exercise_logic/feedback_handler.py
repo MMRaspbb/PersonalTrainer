@@ -17,7 +17,11 @@ class FeedbackManager:
                 "good_rep": ["Świetna pompka!", "Maszyna!"],
                 "bad_back": ["Trzymaj plecy prosto!", "Popraw biodra!"],
                 "rep_bad_form": ["Zaliczono, ale popraw BIODRA!", "Skup się na brzuchu!"],
-                "go_up": ["Dobry zakres, wyciśnij to!"]
+                "go_up": ["Dobry zakres, wyciśnij to!"],
+                "body_hidden": ["Pokaż całe ciało!", "Nie zasłaniaj się!"],
+                "both_arms_visible": ["Pokaż obie ręce!", "Widać tylko jedną rękę!"],
+                "arms_too_wide": ["Zbyt szeroko! Ściśnij ręce.", "Dłonie bliżej do siebie!"],
+                "arms_too_narrow": ["Za wąsko! Rozsuń ręce.", "Szersze rozstawienie rąk!"]
             }
         }
 
