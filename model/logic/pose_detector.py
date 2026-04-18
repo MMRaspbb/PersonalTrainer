@@ -3,7 +3,7 @@ import cv2
 
 
 class PoseDetector:
-    """Odpowiada tylko za detekcję. Tryb VIDEO pozwala na stabilny tracking strumienia."""
+    """Odpowiada tylko za detekcję."""
 
     def __init__(self, model_path):
         self.options = mp.tasks.vision.PoseLandmarkerOptions(

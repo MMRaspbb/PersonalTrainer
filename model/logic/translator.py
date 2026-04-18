@@ -1,4 +1,4 @@
-class Visual:
+class Translator:
     """Tłumaczy wyniki AI na współrzędne bez dodatkowej matematyki."""
     KEY_LANDMARKS = {
         'l_shoulder': 11, 'l_elbow': 13, 'l_wrist': 15,
