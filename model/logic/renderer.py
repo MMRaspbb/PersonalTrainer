@@ -34,3 +34,32 @@ class Renderer:
             if landmark.visibility > 0.5:
                 cx, cy = int(landmark.x * w), int(landmark.y * h)
                 cv2.circle(frame, (cx, cy), 5, (0, 255, 0), -1)
+
+    @classmethod
+    def draw_angle(cls, frame, point, angle):
+        """Wyświetla wartość kąta obok stawu."""
+        cv2.putText(frame, str(int(angle)),
+                    (point['x'] + 10, point['y'] - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2, cv2.LINE_AA)
+
+    @classmethod
+    def draw_stats(cls, frame, counter, stage, feedback=""):
+        """Wyświetla licznik powtórzeń i aktualny status na górze ekranu."""
+
+        cv2.rectangle(frame, (0, 0), (250, 100), (245, 117, 16), -1)
+
+
+        cv2.putText(frame, 'REPS', (15, 12),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
+        cv2.putText(frame, str(counter), (10, 60),
+                    cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 2, cv2.LINE_AA)
+
+        cv2.putText(frame, 'STAGE', (100, 12),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
+        cv2.putText(frame, stage.upper(), (100, 60),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+
+        # Feedback (jeśli istnieje)
+        if feedback:
+            cv2.putText(frame, feedback, (15, 90),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1, cv2.LINE_AA)

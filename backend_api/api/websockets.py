@@ -3,7 +3,7 @@ import numpy as np
 import time
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from backend_api.models.schemas import RealTimeFeedback
-from trainer_backend.core.exercise_logic import SquatCounter  # Import logiki biomechanicznej
+from model.math.exercise_logic import SquatCounter  # Import logiki biomechanicznej
 
 router = APIRouter()
 

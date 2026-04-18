@@ -1,7 +1,6 @@
 from .math_engine import calculate_angle, get_distance
 
 
-
 class SquatCounter:
     """Licznik przysiadów z kontrolą głębokości (90 stopni)."""
 
