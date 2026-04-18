@@ -1,15 +1,14 @@
-import { useEffect, useRef } from "react";
+import {useEffect, useRef} from "react";
 
-export default function CameraView({exercise, timestamp, inProgress}) {
+// Add onDataReceived to the props list
+export default function CameraView({exercise, timestamp, inProgress, onDataReceived}) {
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const socketRef = useRef(null);
 
-    // 1. Create refs for props that change frequently
     const timestampRef = useRef(timestamp);
     const exerciseRef = useRef(exercise);
 
-    // 2. Keep the refs synced with the latest props
     useEffect(() => {
         timestampRef.current = timestamp;
         exerciseRef.current = exercise;
@@ -21,6 +20,19 @@ export default function CameraView({exercise, timestamp, inProgress}) {
         socket.binaryType = "arraybuffer";
 
         socket.onopen = () => console.log("WS connected");
+
+        socket.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                // Używamy onDataReceived bezpośrednio
+                if (onDataReceived) {
+                    onDataReceived(data);
+                }
+            } catch (err) {
+                console.error("Failed to parse WebSocket message:", err);
+            }
+        };
+
         socket.onclose = () => console.log("WS closed");
         socket.onerror = (err) => console.error("WS error", err);
 
@@ -34,7 +46,7 @@ export default function CameraView({exercise, timestamp, inProgress}) {
         async function startCamera() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { width: 640, height: 480 },
+                    video: {width: 640, height: 480},
                     audio: false,
                 });
 
@@ -95,20 +107,19 @@ export default function CameraView({exercise, timestamp, inProgress}) {
 
         }, 100);
 
-        // Cleanup: automatically clears the interval when inProgress becomes false
         return () => clearInterval(interval);
 
-    }, [inProgress]); // Reacting ONLY to inProgress changes
+    }, [inProgress]);
 
     return (
-        <div style={{ width: "100%", maxWidth: "1000px" }}>
+        <div style={{width: "100%", maxWidth: "1000px"}}>
             <video
                 ref={videoRef}
                 autoPlay
                 playsInline
-                style={{ width: "100%", height: "auto" }}
+                style={{width: "100%", height: "auto"}}
             />
-            <canvas ref={canvasRef} style={{ display: "none" }} />
+            <canvas ref={canvasRef} style={{display: "none"}}/>
         </div>
     );
 }
