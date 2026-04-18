@@ -1,5 +1,5 @@
 from ..abstract.base_exercise import BaseExercise
-from ..math_engine import calculate_angle, get_distance
+from ..math_engine import calculate_angle, get_distance, calculate_angle_with_interpolation
 from ..feedback_handler import FeedbackManager
 from ..parameters import ParametersManager, ExerciseType
 from typing import Tuple, Dict, Any
@@ -18,7 +18,6 @@ class PushupCounter(BaseExercise):
 
     def __init__(self):
         """Inicjalizuje licznik pompek z parametrami z ParametersManager"""
-        # Inicjalizuj parent z exercise_type aby pobrać parametry
         super().__init__(exercise_type=ExerciseType.PUSHUP)
 
         self.fm = FeedbackManager()
@@ -142,43 +141,36 @@ class PushupCounter(BaseExercise):
 
     def _calculate_arm_angles(self, l_arm: list, r_arm: list) -> float:
         """
-        Oblicza średni kąt zgięcia w łokciach.
-        Używa wektorów rzeczywistych (bark-łokieć-nadgarstek).
-        Gdy nadgarstek jest niewidoczny, fallback na kąt względem pionu.
+        Oblicza średni kąt zgięcia w łokciach z interpolacją.
+
+        Logika:
+        - visibility >= 0.4: używa rzeczywistych współrzędnych
+        - visibility < 0.4: interpoluje z historii (numpy.interp)
+        - fallback: wirtualny punkt
         """
-        def get_reliable_angle(arm):
-            # arm = [shoulder, elbow, wrist]
+        def get_reliable_angle(arm, limb):
             s = arm[0]  # shoulder
             e = arm[1]  # elbow
             w = arm[2]  # wrist
 
             visibility = w.get('visibility', 1.0) if isinstance(w, dict) else 1.0
 
-            if visibility < 0.4:
-                virtual_point = (s['x'], s['y'] + 1)
-                return calculate_angle(
-                    (s['x'], s['y']),
-                    (e['x'], e['y']),
-                    virtual_point
-                )
-
-            return calculate_angle(
-                (s['x'], s['y']),
-                (e['x'], e['y']),
-                (w['x'], w['y'])
+            # Użyj interpolacji - auto decyduje czy interpolować
+            return calculate_angle_with_interpolation(
+                a=s, b=e, c=w,
+                c_visibility=visibility,
+                limb=limb,
+                use_interpolation=True
             )
 
-        ang_l = get_reliable_angle(l_arm)
-        ang_r = get_reliable_angle(r_arm)
+        ang_l = get_reliable_angle(l_arm, 'l_arm')
+        ang_r = get_reliable_angle(r_arm, 'r_arm')
 
         return (ang_l + ang_r) / 2
 
     def _update_state(self, avg_arm_angle: float, is_straight: bool, is_body_visible: bool) -> None:
         """
         Aktualizuje stan maszyny stanowej i feedback na podstawie kąta ramion.
-
-        Pompka jest zaliczana na podstawie ruchu ramion niezależnie od widoczności ciała.
-        Jeśli ciało jest widoczne, informuje czy plecy są proste.
 
         Args:
             avg_arm_angle: Średni kąt zgięcia ramion
@@ -211,30 +203,23 @@ class PushupCounter(BaseExercise):
         """
         Zastosuj cooldown dla feedback'u.
 
-        Zwraca feedback tylko jeśli wiadomość się zmieniła lub upłynął cooldown.
-        W przeciwnym razie zwraca pusty string.
-
         Args:
             current_time: Aktualny czas (time.time())
 
         Returns:
-            Feedback do wyświetlenia lub pusty string
+            Feedback do wyświetlenia (nigdy nie pusty string)
         """
         if (self.feedback != self._last_feedback_message or
             current_time - self._last_feedback_time >= self._feedback_cooldown):
 
             self._last_feedback_message = self.feedback
             self._last_feedback_time = current_time
-            return self.feedback
 
-        return ""
+        return self._last_feedback_message
 
     def update(self, points: Dict[str, Any]) -> Tuple[int, str, float, str]:
         """
         Aktualizuje stan licznika na podstawie nowych współrzędnych punktów.
-
-        Pompki są liczone na podstawie ruchu ramion.
-        Widoczność ciała wpływa tylko na feedback o postawie, nie na liczenie.
 
         Args:
             points: Słownik ze współrzędnymi punktów anatomicznych w formacie:
