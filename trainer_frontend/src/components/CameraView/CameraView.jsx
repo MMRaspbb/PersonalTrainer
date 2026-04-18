@@ -76,12 +76,12 @@ export default function CameraView() {
     }, []);
 
     return (
-        <div>
+        <div style={{ width: "100%", maxWidth: "1000px" }}>
             <video
                 ref={videoRef}
                 autoPlay
                 playsInline
-                style={{ width: "640px" }}
+                style={{ width: "100%", height: "auto" }}
             />
 
             <canvas ref={canvasRef} style={{ display: "none" }} />
