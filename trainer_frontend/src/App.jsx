@@ -1,12 +1,17 @@
 import "./App.css";
-import { useEffect, useRef } from "react";
-import CameraView from "./components/CameraView.jsx";
+import {BrowserRouter, Routes, Route} from 'react-router-dom';
+import TrainWithPartner from "./views/TrainWithPartner/TrainWithPartner.jsx";
+import Home from "./views/Home/Home.jsx";
 
 function App() {
-  return <>
-    <p>test</p>
-    <CameraView />
-  </>
+    return (
+        <BrowserRouter>
+            <Routes>
+                <Route path="/train" element={<TrainWithPartner/>}/>
+                <Route path="/home" element={<Home />}/>
+            </Routes>
+        </BrowserRouter>
+    );
 }
 
 export default App;

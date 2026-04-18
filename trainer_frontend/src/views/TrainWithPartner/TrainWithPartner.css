@@ -1,0 +1,41 @@
+.train-with-partner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* 📷 wrapper */
+.camera-container {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+}
+
+/* 💬 feedback */
+.feedback {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+
+    padding: 10px 15px;
+    border-radius: 10px;
+    font-size: 18px;
+}
+
+/* 🔢 reps + timer */
+.reps-time {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+
+    padding: 10px 15px;
+    border-radius: 10px;
+    font-size: 20px;
+}
