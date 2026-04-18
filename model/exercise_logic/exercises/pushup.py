@@ -156,6 +156,7 @@ class PushupCounter(BaseExercise):
                 if self.feedback not in self.fm.messages.get("pushup", {}).get("go_up", []):
                     self.feedback = self.fm.get("pushup", "go_up")
 
+
     def _apply_feedback_cooldown(self, current_time: float) -> str:
         """Blokuje migotanie UI. Priorytetowe wiadomości ('good_rep') przerywają cooldown."""
         time_passed = current_time - self._last_feedback_time
