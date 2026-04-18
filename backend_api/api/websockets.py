@@ -2,8 +2,11 @@ import cv2
 import numpy as np
 import time
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from numpy.ma.core import angle
+
 from backend_api.models.schemas import RealTimeFeedback
 from model.exercise_logic.exercise_logic import SquatCounter  # Import logiki biomechanicznej
+from model.exercise_handler import ExerciseHandler
 
 router = APIRouter()
 
@@ -14,7 +17,7 @@ async def video_stream_endpoint(websocket: WebSocket):
 #     print("Połączono z kamerą (React)")
 
     # 1. Inicjalizacja licznika dla tej sesji (np. przysiady)
-    exercise_manager = SquatCounter()
+    exercise_manager = ExerciseHandler("model/tasks/pose_landmarker_full.task")
 
     # 2. Pobranie zainicjalizowanego silnika MediaPipe ze stanu aplikacji
     pose_engine = websocket.app.state.pose_engine
@@ -34,35 +37,26 @@ async def video_stream_endpoint(websocket: WebSocket):
             # 5. PRZEKAZANIE DO MEDIAPIPE
             # Tryb VIDEO wymaga znacznika czasu w milisekundach
             timestamp_ms = int(time.time() * 1000)
-            result = pose_engine.detect(frame, timestamp_ms)
+            result = exercise_manager.process(frame, timestamp_ms,"squat")
 
             # 6. ANALIZA WYNIKÓW I BIOMECHANIKA
-            if result.pose_landmarks:
-                print(result.pose_landmarks[0])
-                # Wyciągamy punkty dla pierwszego wykrytego szkieletu
-                landmarks = result.pose_landmarks[0]
-
-                # Pobieramy współrzędne (x, y) dla stawów: biodro(24), kolano(26), kostka(28)
-                hip = [landmarks[24].x, landmarks[24].y]
-                knee = [landmarks[26].x, landmarks[26].y]
-                ankle = [landmarks[28].x, landmarks[28].y]
-
-                # Aktualizujemy licznik powtórzeń
-                count, stage, angle = exercise_manager.update(hip, knee, ankle)
-                feedback = "skibidi"
-
+            if result.message != "Nie wykryto postaci":
+                print("dziala")
                 # Przygotowujemy prawdziwy feedback
                 response = RealTimeFeedback(
                     is_tracking=True,
-                    rep_count=count,
-                    feedback = feedback
+                    rep_count=result.counter,
+                    angle = result.counter,
+                    feedback = result.message
+
                 )
             else:
-#                 print("gowno")
+                print("gowno")
                 response = RealTimeFeedback(
                     is_tracking=False,
-                    rep_count=exercise_manager.counter,
-                    feedback = "Błąd obrazu"
+                    rep_count=result.counter,
+                    angle = result.counter,
+                    feedback = result.message
                 )
 
             # 7. WYSYŁKA JSON Z WYNIKAMI DO REACTA

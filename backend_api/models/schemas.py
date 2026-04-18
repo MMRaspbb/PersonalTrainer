@@ -24,6 +24,7 @@ class PoseDataIn(BaseModel):
 class RealTimeFeedback(BaseModel):
     is_tracking: bool
     rep_count: int
+    angle: float
     feedback :str  # Link do ExerciseDB po wykryciu błędu
 
 # --- 4. WYJŚCIE RAPORT: Co wysyłasz do Javy (REST API) ---
