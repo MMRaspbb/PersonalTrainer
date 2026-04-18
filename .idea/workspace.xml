@@ -4,17 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="34a98f40-139f-4dad-a117-306d8cc75270" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/PersonalTrainer.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/model/logic/pose_detector.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/model/logic/visual.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/trainer_backend/core/exercise_logic.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/trainer_backend/core/math_engine.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/trainer_backend/core/requirements" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/model/visual.py" beforeDir="false" afterPath="$PROJECT_DIR$/model/visual.py" afterDir="false" />
-    </list>
+    <list default="true" id="34a98f40-139f-4dad-a117-306d8cc75270" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -41,7 +31,7 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "Merging main",
+    "git-widget-placeholder": "main",
     "last_opened_file_path": "D:/hackaton/PersonalTrainer",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -69,7 +59,7 @@
       <updated>1776518524282</updated>
       <workItem from="1776518525360" duration="4132000" />
       <workItem from="1776522832143" duration="1741000" />
-      <workItem from="1776525690890" duration="1399000" />
+      <workItem from="1776525690890" duration="2834000" />
     </task>
     <servers />
   </component>
