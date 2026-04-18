@@ -150,16 +150,19 @@ class PushupCounter(BaseExercise):
             self.stage = "down"
         else:
             if self.stage == "up":
-                self.feedback = self.fm.get("pushup", "go_lower")
+                if self.feedback not in self.fm.messages.get("pushup", {}).get("go_lower", []):
+                    self.feedback = self.fm.get("pushup", "go_lower")
             elif self.stage == "down":
-                self.feedback = self.fm.get("pushup", "extend_fully")
+                if self.feedback not in self.fm.messages.get("pushup", {}).get("go_up", []):
+                    self.feedback = self.fm.get("pushup", "go_up")
 
     def _apply_feedback_cooldown(self, current_time: float) -> str:
         """Blokuje migotanie UI. Priorytetowe wiadomości ('good_rep') przerywają cooldown."""
         time_passed = current_time - self._last_feedback_time
-        priority_messages = [self.fm.get("pushup", "good_rep")]
 
-        if time_passed >= self._feedback_cooldown or self.feedback in priority_messages:
+        is_priority = self.feedback in self.fm.messages.get("pushup", {}).get("good_rep", [])
+
+        if time_passed >= self._feedback_cooldown or is_priority:
             if self.feedback != self._last_feedback_message:
                 self._last_feedback_message = self.feedback
                 self._last_feedback_time = current_time
@@ -175,14 +178,14 @@ class PushupCounter(BaseExercise):
         r_visible = all(k in points and points[k] is not None for k in r_keys)
 
         if not l_visible and not r_visible:
-            return self.counter, self.stage, 0.0, self.fm.get("pushup", "both_arms_visible")
+            self.feedback = self.fm.get("pushup", "both_arms_visible")
+            self.arm_angle = 0.0
+        else:
+            l_arm = [points[k] for k in l_keys] if l_visible else []
+            r_arm = [points[k] for k in r_keys] if r_visible else []
 
-        l_arm = [points[k] for k in l_keys] if l_visible else []
-        r_arm = [points[k] for k in r_keys] if r_visible else []
-
-        self.arm_angle = self._calculate_arm_angles(l_arm, r_arm, l_visible, r_visible)
-
-        self._update_state(self.arm_angle)
+            self.arm_angle = self._calculate_arm_angles(l_arm, r_arm, l_visible, r_visible)
+            self._update_state(self.arm_angle)
 
         current_time = time.time()
         feedback_to_return = self._apply_feedback_cooldown(current_time)
