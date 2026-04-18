@@ -19,6 +19,7 @@ class SquatCounter(BaseExercise):
         self.avg_angle = 0.0
         self.angle_l = 0.0
         self.angle_r = 0.0
+        self._legs_hidden_warned = False
 
     def _validate_points(self, points: Dict[str, Any]) -> Tuple[bool, str]:
         """
@@ -37,6 +38,22 @@ class SquatCounter(BaseExercise):
                 return False, "Ustaw się bokiem (widać obie nogi)"
 
         return True, ""
+
+    def _check_legs_visibility(self, points: Dict[str, Any]) -> bool:
+        """
+        Sprawdza czy nogi są widoczne (wszystkie wymagane punkty dostępne).
+
+        Args:
+            points: Słownik ze współrzędnymi punktów
+
+        Returns:
+            True jeśli nogi widoczne, False w przeciwnym razie
+        """
+        required_keys = ['l_hip', 'l_knee', 'l_ankle', 'r_hip', 'r_knee', 'r_ankle']
+        for key in required_keys:
+            if key not in points or points[key] is None:
+                return False
+        return True
 
     def _extract_leg_points(self, points: Dict[str, Any]) -> Tuple[list, list]:
         """
@@ -77,28 +94,29 @@ class SquatCounter(BaseExercise):
 
         return angle_l, angle_r, avg_angle
 
-    def _update_state(self, avg_angle: float) -> None:
+    def _update_state(self, avg_angle: float, is_legs_visible: bool) -> None:
         """
         Aktualizuje stan maszyny stanowej i feedback na podstawie kąta.
 
+        Przysiad jest zaliczany niezależnie od widoczności nóg.
+        Feedback zależy od czy nogi są widoczne.
+
         Args:
             avg_angle: Średni kąt zgięcia kolan
+            is_legs_visible: Czy nogi są widoczne
         """
         if avg_angle > self.threshold_up:
-            # Faza pełnego wyprostu
             if self.stage == "down":
                 self.counter += 1
                 self.feedback = self.fm.get("squat", "good_rep")
             self.stage = "up"
 
         elif avg_angle < self.threshold_down:
-            # Faza pełnego zgięcia
             if self.stage == "up":
                 self.feedback = self.fm.get("squat", "go_up")
             self.stage = "down"
 
         else:
-            # Faza pośrednia - feedback motywacyjny
             if self.stage == "up":
                 self.feedback = self.fm.get("squat", "go_lower")
             elif self.stage == "down":
@@ -108,6 +126,9 @@ class SquatCounter(BaseExercise):
         """
         Aktualizuje stan licznika na podstawie nowych współrzędnych punktów.
 
+        Przysiad są liczone na podstawie ruchu nóg.
+        Widoczność nóg wpływa tylko na feedback, nie na liczenie.
+
         Args:
             points: Słownik ze współrzędnymi punktów anatomicznych w formacie:
                    {'l_hip': {'x': float, 'y': float}, ...}
@@ -115,18 +136,21 @@ class SquatCounter(BaseExercise):
         Returns:
             Krotka (licznik, stan, średni_kąt, komunikat_feedback)
         """
-        # Walidacja danych wejściowych
         is_valid, error_msg = self._validate_points(points)
         if not is_valid:
             return self.counter, self.stage, 0.0, error_msg
 
-        # Ekstrahowanie punktów
+        is_legs_visible = self._check_legs_visibility(points)
+
         l_pts, r_pts = self._extract_leg_points(points)
 
-        # Obliczenie kątów
         self.angle_l, self.angle_r, self.avg_angle = self._calculate_angles(l_pts, r_pts)
 
-        # Aktualizacja stanu
-        self._update_state(self.avg_angle)
+        self._update_state(self.avg_angle, is_legs_visible)
+
+        if not is_legs_visible and self.feedback != "Ustaw się bokiem (widać obie nogi)":
+            if not self._legs_hidden_warned:
+                self.feedback = "Pokaż całe nogi!"
+                self._legs_hidden_warned = True
 
         return self.counter, self.stage, self.avg_angle, self.feedback
