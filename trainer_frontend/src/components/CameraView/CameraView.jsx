@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import {useEffect, useRef} from "react";
 
 // Add onDataReceived to the props list
 export default function CameraView({exercise, timestamp, inProgress, onDataReceived}) {
@@ -21,18 +21,15 @@ export default function CameraView({exercise, timestamp, inProgress, onDataRecei
 
         socket.onopen = () => console.log("WS connected");
 
-        // 🚀 Add the message listener here
         socket.onmessage = (event) => {
             try {
-                // Parse the incoming JSON string from the backend
                 const data = JSON.parse(event.data);
-
-                // Pass it up to TrainWithPartner if the function was provided
+                // Używamy onDataReceived bezpośrednio
                 if (onDataReceived) {
                     onDataReceived(data);
                 }
             } catch (err) {
-                console.error("Failed to parse incoming WebSocket message:", err);
+                console.error("Failed to parse WebSocket message:", err);
             }
         };
 
@@ -42,14 +39,14 @@ export default function CameraView({exercise, timestamp, inProgress, onDataRecei
         socketRef.current = socket;
 
         return () => socket.close();
-    }, [onDataReceived]);
+    }, []);
 
     // 📷 Camera setup
     useEffect(() => {
         async function startCamera() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { width: 640, height: 480 },
+                    video: {width: 640, height: 480},
                     audio: false,
                 });
 
@@ -115,14 +112,14 @@ export default function CameraView({exercise, timestamp, inProgress, onDataRecei
     }, [inProgress]);
 
     return (
-        <div style={{ width: "100%", maxWidth: "1000px" }}>
+        <div style={{width: "100%", maxWidth: "1000px"}}>
             <video
                 ref={videoRef}
                 autoPlay
                 playsInline
-                style={{ width: "100%", height: "auto" }}
+                style={{width: "100%", height: "auto"}}
             />
-            <canvas ref={canvasRef} style={{ display: "none" }} />
+            <canvas ref={canvasRef} style={{display: "none"}}/>
         </div>
     );
 }
