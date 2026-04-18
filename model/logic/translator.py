@@ -9,12 +9,22 @@ class Translator:
 
     @classmethod
     def get_key_points(cls, pose_landmarks, w, h):
-        """Zwraca znormalizowane punkty w pikselach."""
+        """
+        Zwraca znormalizowane punkty w pikselach z informacją o widoczności.
+
+        Nie filtruje po visibility - to będzie robić logika ćwiczenia.
+        Punkty z visibility < 0.5 będą miały w słowniku 'visibility' < 0.5.
+        """
         points = {}
         for name, index in cls.KEY_LANDMARKS.items():
             landmark = pose_landmarks[index]
             if landmark.visibility > 0.5:
-                points[name] = {"x": int(landmark.x * w), "y": int(landmark.y * h)}
+                points[name] = {
+                    "x": int(landmark.x * w),
+                    "y": int(landmark.y * h),
+                    "visibility": landmark.visibility,
+                    "z": landmark.z
+                }
             else:
                 points[name] = None
         return points

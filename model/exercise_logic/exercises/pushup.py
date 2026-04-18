@@ -2,6 +2,7 @@ from ..abstract.base_exercise import BaseExercise
 from ..math_engine import calculate_angle, get_distance
 from ..feedback_handler import FeedbackManager
 from typing import Tuple, Dict, Any
+import time
 
 
 class PushupCounter(BaseExercise):
@@ -20,6 +21,10 @@ class PushupCounter(BaseExercise):
         self.arm_angle = 0.0
         self.body_angle = 0.0
         self._body_hidden_warned = False
+        # Cooldown dla feedback'u
+        self._last_feedback_time = 0.0
+        self._last_feedback_message = ""
+        self._feedback_cooldown = 1.0  # 1 sekundy między powiadomieniami
 
     def _validate_visible_points(self, points: Dict[str, Any], required_keys: list) -> Tuple[bool, str]:
         """
@@ -55,8 +60,6 @@ class PushupCounter(BaseExercise):
         body_keys = ['l_shoulder', 'l_hip', 'l_ankle', 'r_shoulder', 'r_hip', 'r_ankle']
         is_visible, _ = self._validate_visible_points(points, body_keys)
 
-        # Jeśli ciało nie jest widoczne, zwróć FALSE dla osiowości ale TRUE dla widoczności
-        # Umożliwia to liczenie pompek bez kontroli pleców
         if not is_visible:
             return False, 0.0, False
 
@@ -97,19 +100,16 @@ class PushupCounter(BaseExercise):
         l_shoulder = points['l_shoulder']
         r_shoulder = points['r_shoulder']
 
-        # Odległość między dłońmi
         hand_distance = get_distance(
             (l_wrist['x'], l_wrist['y']),
             (r_wrist['x'], r_wrist['y'])
         )
 
-        # Szerokość barków
         shoulder_width = get_distance(
             (l_shoulder['x'], l_shoulder['y']),
             (r_shoulder['x'], r_shoulder['y'])
         )
 
-        # Idealna wartość: 1.2 - 1.5
         ratio = hand_distance / shoulder_width if shoulder_width > 0 else 0
 
         if ratio < 1.0:
@@ -121,38 +121,35 @@ class PushupCounter(BaseExercise):
 
     def _calculate_arm_angles(self, l_arm: list, r_arm: list) -> float:
         """
-        Oblicza średni kąt zgięcia ramion (bark-łokieć).
-
-        Używa tylko bark i łokieć, ignorując nadgarstek.
-        Wartości około 180° to proste ramiona, <90° to ugiete.
-
-        Args:
-            l_arm: Lista współrzędnych lewego ramienia [shoulder, elbow, wrist]
-            r_arm: Lista współrzędnych prawego ramienia [shoulder, elbow, wrist]
-
-        Returns:
-            Średni kąt zgięcia ramion (bark-łokieć)
+        Oblicza średni kąt zgięcia w łokciach.
+        Używa wektorów rzeczywistych (bark-łokieć-nadgarstek).
+        Gdy nadgarstek jest niewidoczny, fallback na kąt względem pionu.
         """
-        # Używamy tylko bark i łokieć - pomijamy nadgarstek
-        l_shoulder = l_arm[0]
-        l_elbow = l_arm[1]
-        r_shoulder = r_arm[0]
-        r_elbow = r_arm[1]
+        def get_reliable_angle(arm):
+            # arm = [shoulder, elbow, wrist]
+            s = arm[0]  # shoulder
+            e = arm[1]  # elbow
+            w = arm[2]  # wrist
 
-        # Kąt bark-łokieć obliczamy względem pionu (0,1)
-        l_virtual_down = (l_shoulder['x'], l_shoulder['y'] + 100)
-        r_virtual_down = (r_shoulder['x'], r_shoulder['y'] + 100)
+            visibility = w.get('visibility', 1.0) if isinstance(w, dict) else 1.0
 
-        ang_l = calculate_angle(
-            (l_shoulder['x'], l_shoulder['y']),
-            (l_elbow['x'], l_elbow['y']),
-            l_virtual_down
-        )
-        ang_r = calculate_angle(
-            (r_shoulder['x'], r_shoulder['y']),
-            (r_elbow['x'], r_elbow['y']),
-            r_virtual_down
-        )
+            if visibility < 0.4:
+                virtual_point = (s['x'], s['y'] + 1)
+                return calculate_angle(
+                    (s['x'], s['y']),
+                    (e['x'], e['y']),
+                    virtual_point
+                )
+
+            return calculate_angle(
+                (s['x'], s['y']),
+                (e['x'], e['y']),
+                (w['x'], w['y'])
+            )
+
+        ang_l = get_reliable_angle(l_arm)
+        ang_r = get_reliable_angle(r_arm)
+
         return (ang_l + ang_r) / 2
 
     def _update_state(self, avg_arm_angle: float, is_straight: bool, is_body_visible: bool) -> None:
@@ -169,7 +166,6 @@ class PushupCounter(BaseExercise):
         """
         if avg_arm_angle > 160:
             if self.stage == "down":
-                # Zawsze zaliczamy, ale z różnym feedbackiem
                 self.counter += 1
                 if is_body_visible:
                     if is_straight:
@@ -177,7 +173,6 @@ class PushupCounter(BaseExercise):
                     else:
                         self.feedback = self.fm.get("pushup", "rep_bad_form")
                 else:
-                    # Ciało nie widoczne, ale ruchy OK
                     self.feedback = self.fm.get("pushup", "good_rep")
             self.stage = "up"
 
@@ -190,6 +185,28 @@ class PushupCounter(BaseExercise):
                     self.feedback = self.fm.get("pushup", "bad_back")
             else:
                 self.feedback = self.fm.get("pushup", "go_up")
+
+    def _apply_feedback_cooldown(self, current_time: float) -> str:
+        """
+        Zastosuj cooldown dla feedback'u.
+
+        Zwraca feedback tylko jeśli wiadomość się zmieniła lub upłynął cooldown.
+        W przeciwnym razie zwraca pusty string.
+
+        Args:
+            current_time: Aktualny czas (time.time())
+
+        Returns:
+            Feedback do wyświetlenia lub pusty string
+        """
+        if (self.feedback != self._last_feedback_message or
+            current_time - self._last_feedback_time >= self._feedback_cooldown):
+
+            self._last_feedback_message = self.feedback
+            self._last_feedback_time = current_time
+            return self.feedback
+
+        return ""
 
     def update(self, points: Dict[str, Any]) -> Tuple[int, str, float, str]:
         """
@@ -233,4 +250,7 @@ class PushupCounter(BaseExercise):
                 self.feedback = self.fm.get("pushup", "body_hidden")
                 self._body_hidden_warned = True
 
-        return self.counter, self.stage, self.arm_angle, self.feedback
+        current_time = time.time()
+        feedback_to_return = self._apply_feedback_cooldown(current_time)
+
+        return self.counter, self.stage, self.arm_angle, feedback_to_return

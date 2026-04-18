@@ -2,6 +2,7 @@ from ..abstract.base_exercise import BaseExercise
 from ..math_engine import calculate_angle
 from ..feedback_handler import FeedbackManager
 from typing import Tuple, Dict, Any
+import time
 
 class SquatCounter(BaseExercise):
     """
@@ -20,6 +21,9 @@ class SquatCounter(BaseExercise):
         self.angle_l = 0.0
         self.angle_r = 0.0
         self._legs_hidden_warned = False
+        self._last_feedback_time = 0.0
+        self._last_feedback_message = ""
+        self._feedback_cooldown = 1.0  # 1 sekundy między powiadomieniami
 
     def _validate_points(self, points: Dict[str, Any]) -> Tuple[bool, str]:
         """
@@ -122,12 +126,35 @@ class SquatCounter(BaseExercise):
             elif self.stage == "down":
                 self.feedback = self.fm.get("squat", "extend_fully")
 
+    def _apply_feedback_cooldown(self, current_time: float) -> str:
+        """
+        Zastosuj cooldown dla feedback'u.
+
+        Zwraca feedback tylko jeśli wiadomość się zmieniła lub upłynął cooldown.
+        W przeciwnym razie zwraca pusty string.
+
+        Args:
+            current_time: Aktualny czas (time.time())
+
+        Returns:
+            Feedback do wyświetlenia lub pusty string
+        """
+        if (self.feedback != self._last_feedback_message or
+            current_time - self._last_feedback_time >= self._feedback_cooldown):
+
+            self._last_feedback_message = self.feedback
+            self._last_feedback_time = current_time
+            return self.feedback
+
+        return ""
+
     def update(self, points: Dict[str, Any]) -> Tuple[int, str, float, str]:
         """
         Aktualizuje stan licznika na podstawie nowych współrzędnych punktów.
 
         Przysiad są liczone na podstawie ruchu nóg.
         Widoczność nóg wpływa tylko na feedback, nie na liczenie.
+        Feedback ma cooldown 2 sekund między zmianami.
 
         Args:
             points: Słownik ze współrzędnymi punktów anatomicznych w formacie:
@@ -153,4 +180,7 @@ class SquatCounter(BaseExercise):
                 self.feedback = "Pokaż całe nogi!"
                 self._legs_hidden_warned = True
 
-        return self.counter, self.stage, self.avg_angle, self.feedback
+        current_time = time.time()
+        feedback_to_return = self._apply_feedback_cooldown(current_time)
+
+        return self.counter, self.stage, self.avg_angle, feedback_to_return
