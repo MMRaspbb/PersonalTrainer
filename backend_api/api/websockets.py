@@ -3,6 +3,7 @@ import numpy as np
 import time
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from numpy.ma.core import angle
+import base64
 
 from backend_api.models.schemas import RealTimeFeedback
 from model.exercise_logic.exercise_logic import SquatCounter  # Import logiki biomechanicznej
@@ -20,15 +21,19 @@ async def video_stream_endpoint(websocket: WebSocket):
     exercise_manager = ExerciseHandler("model/tasks/pose_landmarker_full.task")
 
     # 2. Pobranie zainicjalizowanego silnika MediaPipe ze stanu aplikacji
-    pose_engine = websocket.app.state.pose_engine
+    # pose_engine = websocket.app.state.pose_engine
 
     try:
         while True:
             # 3. Odbiór binarny klatki (Blob JPEG z Reacta)
-            data = await websocket.receive_bytes()
-
+            payload = await websocket.receive_json()
+            frame = payload.get("frame")
+            timestamp = payload.get("timestamp")
+            exercise_type = payload.get("exercise")
+            header, encoded = frame.split(",", 1)
+            binary_data = base64.b64decode(encoded)
             # 4. Dekodowanie bajtów do macierzy pikseli
-            nparr = np.frombuffer(data, np.uint8)
+            nparr = np.frombuffer(binary_data, np.uint8)
             frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
             if frame is None:
