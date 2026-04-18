@@ -3,7 +3,7 @@ import numpy as np
 
 def calculate_angle(a, b, c):
     """
-    Zadanie 1: Oblicza kąt w stopniach między trzema punktami.
+    Oblicza kąt w stopniach między trzema punktami.
     Wierzchołkiem kąta jest punkt 'b'.
     """
     a = np.array(a)[:2]
@@ -14,7 +14,6 @@ def calculate_angle(a, b, c):
     radians = np.arctan2(c[1] - b[1], c[0] - b[0]) - np.arctan2(a[1] - b[1], a[0] - b[0])
     angle = np.abs(radians * 180.0 / np.pi)
 
-    # Normalizacja do przedziału [0, 180]
     if angle > 180.0:
         angle = 360.0 - angle
 
@@ -23,7 +22,7 @@ def calculate_angle(a, b, c):
 
 def get_distance(p1, p2):
     """
-    Zadanie 4: Oblicza dystans euklidesowy między punktami.
+    Oblicza dystans euklidesowy między punktami.
     Służy do kalibracji systemu pod wzrost użytkownika.
     """
     return np.linalg.norm(np.array(p1)[:2] - np.array(p2)[:2])

@@ -3,7 +3,7 @@ from .math_engine import calculate_angle, get_distance
 
 
 class SquatCounter:
-    """Zadanie 2: Licznik przysiadów z kontrolą głębokości (90 stopni)."""
+    """Licznik przysiadów z kontrolą głębokości (90 stopni)."""
 
     def __init__(self):
         self.counter = 0
@@ -25,7 +25,7 @@ class SquatCounter:
 
 
 class PushupCounter:
-    """Zadanie 3: Korektor pompek ze sprawdzaniem osiowości kręgosłupa."""
+    """Korektor pompek ze sprawdzaniem osiowości kręgosłupa."""
 
     def __init__(self):
         self.counter = 0
@@ -35,7 +35,6 @@ class PushupCounter:
     def check_alignment(self, shoulder, hip, ankle):
         """Sprawdza, czy plecy są w linii prostej."""
         body_angle = calculate_angle(shoulder, hip, ankle)
-        # Tolerancja dla prostych pleców: 160-200 stopni
         return 160 <= body_angle <= 200, body_angle
 
     def update(self, shoulder, elbow, wrist, hip, ankle):
@@ -63,12 +62,11 @@ class CalibrationManager:
 
     def calibrate(self, shoulder, hip):
         """
-        Zadanie 4: Oblicza skalę użytkownika na podstawie długości tułowia.
+        Oblicza skalę użytkownika na podstawie długości tułowia.
         Dystans między barkiem a biodrem to stabilna miara wzrostu.
         """
         torso_length = get_distance(shoulder, hip)
 
-        # Przyjmujemy, że 0.5 (w jednostkach MediaPipe) to standardowy tułów.
         # Skalujemy czułość algorytmów pod ten wynik.
         self.user_height_scale = torso_length / 0.5
         self.is_calibrated = True
