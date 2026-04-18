@@ -115,5 +115,5 @@ if __name__ == "__main__":
     MODEL_PATH = os.path.join(BASE_DIR, 'tasks/pose_landmarker_full.task')
 
     # Możesz tutaj łatwo zmienić "squat" na "pushup"
-    controller = PoseController(MODEL_PATH, exercise_type="pushup")
+    controller = PoseController(MODEL_PATH, exercise_type="squat")
     controller.run()
