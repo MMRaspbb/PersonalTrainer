@@ -24,9 +24,7 @@ class PoseDataIn(BaseModel):
 class RealTimeFeedback(BaseModel):
     is_tracking: bool
     rep_count: int
-    posture_status: str  # Np. "Good", "Bad", "Warning"
-    instruction: Optional[str]  # Np. "Zejdź niżej!"
-    gif_url: Optional[str]  # Link do ExerciseDB po wykryciu błędu
+    feedback :str  # Link do ExerciseDB po wykryciu błędu
 
 # --- 4. WYJŚCIE RAPORT: Co wysyłasz do Javy (REST API) ---
 class JavaWorkoutSummary(BaseModel):
