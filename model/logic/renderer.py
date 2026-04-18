@@ -1,11 +1,8 @@
 import cv2
 
-
 class Renderer:
     """
-    Debug class.
-
-    Odpowiada wyłącznie za nakładanie szkieletu na obraz z kamery.
+    Klasa odpowiadająca za renderowanie szkieletu, kątów oraz statystyk na obrazie.
     """
 
     POSE_CONNECTIONS = [
@@ -20,11 +17,9 @@ class Renderer:
     @classmethod
     def draw(cls, frame, pose_landmarks):
         h, w, _ = frame.shape
-
         for start_idx, end_idx in cls.POSE_CONNECTIONS:
             l_start = pose_landmarks[start_idx]
             l_end = pose_landmarks[end_idx]
-
             if l_start.visibility > 0.5 and l_end.visibility > 0.5:
                 start_point = (int(l_start.x * w), int(l_start.y * h))
                 end_point = (int(l_end.x * w), int(l_end.y * h))
@@ -37,29 +32,33 @@ class Renderer:
 
     @classmethod
     def draw_angle(cls, frame, point, angle):
-        """Wyświetla wartość kąta obok stawu."""
+        """Wyświetla wartość kąta obok stawu (powiększona czcionka)."""
+        # Zwiększono fontScale z 0.7 na 1.2 oraz grubość na 3
         cv2.putText(frame, str(int(angle)),
-                    (point['x'] + 10, point['y'] - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2, cv2.LINE_AA)
+                    (point['x'] + 15, point['y'] - 15),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1.2, (255, 255, 255), 3, cv2.LINE_AA)
 
     @classmethod
     def draw_stats(cls, frame, counter, stage, feedback=""):
-        """Wyświetla licznik powtórzeń i aktualny status na górze ekranu."""
+        """Wyświetla powiększony panel statystyk na górze ekranu."""
 
-        cv2.rectangle(frame, (0, 0), (250, 100), (245, 117, 16), -1)
+        # Zwiększono obszar tła (z 250x100 na 600x160)
+        cv2.rectangle(frame, (0, 0), (600, 160), (245, 117, 16), -1)
 
+        # Sekcja REPS (licznik)
+        cv2.putText(frame, 'POWTÓRZENIA', (15, 25),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 1, cv2.LINE_AA)
+        cv2.putText(frame, str(counter), (15, 110),
+                    cv2.FONT_HERSHEY_SIMPLEX, 3.5, (255, 255, 255), 5, cv2.LINE_AA)
 
-        cv2.putText(frame, 'REPS', (15, 12),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
-        cv2.putText(frame, str(counter), (10, 60),
-                    cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 2, cv2.LINE_AA)
+        # Sekcja STAGE (faza ruchu)
+        cv2.putText(frame, 'FAZA', (300, 25),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 1, cv2.LINE_AA)
+        cv2.putText(frame, stage.upper(), (300, 110),
+                    cv2.FONT_HERSHEY_SIMPLEX, 2.0, (255, 255, 255), 4, cv2.LINE_AA)
 
-        cv2.putText(frame, 'STAGE', (100, 12),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
-        cv2.putText(frame, stage.upper(), (100, 60),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
-
-        # Feedback (jeśli istnieje)
+        # Sekcja FEEDBACK (informacja zwrotna) - znacznie powiększona
         if feedback:
-            cv2.putText(frame, feedback, (15, 90),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
+            # Ustawiono na dole boksu z fontScale 1.2 i kolorem czerwonym/białym
+            cv2.putText(frame, feedback, (15, 145),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3, cv2.LINE_AA)
