@@ -1,5 +1,6 @@
 .train-with-partner {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     height: 100vh;
@@ -38,4 +39,37 @@
     padding: 10px 15px;
     border-radius: 10px;
     font-size: 20px;
+}
+
+.startButton {
+    width: 380px;
+    height: 56px;
+
+    background-color: #9BC4BC !important;
+    color: #090909 !important;
+
+    font-size: 16px !important;
+    font-weight: 600 !important;
+
+    border-radius: 14px !important;
+
+    /* IMPORTANT: override MUI elevation shadow */
+    box-shadow: none !important;
+
+    transition: all 0.25s ease !important;
+}
+
+/* hover state */
+.startButton:hover {
+    background-color: #8DDBE0 !important;
+
+    transform: translateY(-2px) scale(1.02);
+
+    box-shadow:
+            0 10px 25px rgba(141, 219, 224, 0.25) !important;
+}
+
+/* optional active press effect */
+.startButton:active {
+    transform: scale(0.98);
 }
