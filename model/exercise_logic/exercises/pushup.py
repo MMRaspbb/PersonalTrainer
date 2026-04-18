@@ -106,8 +106,8 @@ class PushupCounter(BaseExercise):
 
         return True, ""
 
-    def _calculate_arm_angles(self, l_arm: list, r_arm: list) -> float:
-        """Oblicza średni kąt zgięcia w łokciach z interpolacją."""
+    def _calculate_arm_angles(self, l_arm: list, r_arm: list, l_visible: bool=True, r_visible: bool=True) -> float:
+        """Oblicza średni kąt zgięcia w łokciach z uwzględnieniem tylko widocznych ramion."""
         def get_reliable_angle(arm, limb):
             s = arm[0]  # shoulder
             e = arm[1]  # elbow
@@ -123,36 +123,36 @@ class PushupCounter(BaseExercise):
                 use_interpolation=True
             )
 
-        ang_l = get_reliable_angle(l_arm, 'l_arm')
-        ang_r = get_reliable_angle(r_arm, 'r_arm')
+        angles = []
+        if l_visible and l_arm:
+            angles.append(get_reliable_angle(l_arm, 'l_arm'))
+        if r_visible and r_arm:
+            angles.append(get_reliable_angle(r_arm, 'r_arm'))
 
-        return (ang_l + ang_r) / 2
+        if not angles:
+            return 0.0
 
-    def _update_state(self, avg_arm_angle: float, is_straight: bool, is_body_visible: bool) -> None:
+        return sum(angles) / len(angles)
+
+    def _update_state(self, avg_arm_angle: float) -> None:
         """
         Aktualizuje stan maszyny stanowej i feedback na podstawie kąta ramion.
         """
         if avg_arm_angle > 160:
             if self.stage == "down":
                 self.counter += 1
-                if is_body_visible:
-                    if is_straight:
-                        self.feedback = self.fm.get("pushup", "good_rep")
-                    else:
-                        self.feedback = self.fm.get("pushup", "rep_bad_form")
-                else:
-                    self.feedback = self.fm.get("pushup", "good_rep")
+                self.feedback = self.fm.get("pushup", "good_rep")
             self.stage = "up"
 
         elif avg_arm_angle < 90:
-            self.stage = "down"
-            if is_body_visible:
-                if is_straight:
-                    self.feedback = self.fm.get("pushup", "go_up")
-                else:
-                    self.feedback = self.fm.get("pushup", "bad_back")
-            else:
+            if self.stage == "up":
                 self.feedback = self.fm.get("pushup", "go_up")
+            self.stage = "down"
+        else:
+            if self.stage == "up":
+                self.feedback = self.fm.get("pushup", "go_lower")
+            elif self.stage == "down":
+                self.feedback = self.fm.get("pushup", "extend_fully")
 
     def _apply_feedback_cooldown(self, current_time: float) -> str:
         """Blokuje migotanie UI. Priorytetowe wiadomości ('good_rep') przerywają cooldown."""
@@ -168,36 +168,23 @@ class PushupCounter(BaseExercise):
 
     def update(self, points: Dict[str, Any]) -> Tuple[int, str, float, str]:
         """Aktualizuje stan licznika na podstawie nowych współrzędnych punktów."""
-        arm_keys = ['l_shoulder', 'l_elbow', 'l_wrist', 'r_shoulder', 'r_elbow', 'r_wrist']
-        is_arms_visible, arm_error = self._validate_visible_points(points, arm_keys)
+        l_keys = ['l_shoulder', 'l_elbow', 'l_wrist']
+        r_keys = ['r_shoulder', 'r_elbow', 'r_wrist']
 
-        if not is_arms_visible:
-            return self.counter, self.stage, 0.0, arm_error
+        l_visible = all(k in points and points[k] is not None for k in l_keys)
+        r_visible = all(k in points and points[k] is not None for k in r_keys)
 
-        is_width_ok, width_feedback = self._check_arm_width(points)
-        if not is_width_ok:
-            self.feedback = width_feedback
-            return self.counter, self.stage, 0.0, width_feedback
+        if not l_visible and not r_visible:
+            return self.counter, self.stage, 0.0, self.fm.get("pushup", "both_arms_visible")
 
-        l_arm = [points['l_shoulder'], points['l_elbow'], points['l_wrist']]
-        r_arm = [points['r_shoulder'], points['r_elbow'], points['r_wrist']]
+        l_arm = [points[k] for k in l_keys] if l_visible else []
+        r_arm = [points[k] for k in r_keys] if r_visible else []
 
-        is_straight, body_angle, is_body_visible = self._check_alignment(points)
+        self.arm_angle = self._calculate_arm_angles(l_arm, r_arm, l_visible, r_visible)
 
-        self.arm_angle = self._calculate_arm_angles(l_arm, r_arm)
-
-        self._update_state(self.arm_angle, is_straight, is_body_visible)
-
-        if not is_body_visible and self.feedback not in [self.fm.get("pushup", "body_hidden"),
-                                                         self.fm.get("pushup", "both_arms_visible"),
-                                                         self.fm.get("pushup", "arms_too_wide"),
-                                                         self.fm.get("pushup", "arms_too_narrow")]:
-            if not self._body_hidden_warned:
-                self.feedback = self.fm.get("pushup", "body_hidden")
-                self._body_hidden_warned = True
+        self._update_state(self.arm_angle)
 
         current_time = time.time()
         feedback_to_return = self._apply_feedback_cooldown(current_time)
 
         return self.counter, self.stage, self.arm_angle, feedback_to_return
-
