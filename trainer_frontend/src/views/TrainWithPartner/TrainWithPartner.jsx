@@ -1,8 +1,8 @@
 import CameraView from "../../components/CameraView/CameraView.jsx";
-import {Box, Button} from "@mui/material";
+import { Box, Button } from "@mui/material";
 import "./TrainWithPartner.css";
-import {useEffect, useId, useState} from "react";
-import {useParams} from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 
 const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -12,15 +12,19 @@ const formatTime = (seconds) => {
 };
 
 export default function TrainWithPartner() {
+    const { exercise } = useParams();
 
-    const exercise = useParams().exercise
+    const [timestamp, setTimestamp] = useState(0);
+    const [inProgress, setInProgress] = useState(false);
 
-    const [timestamp, setTimestamp] = useState(.0)
-    const [inProgress, setInProgress] = useState(false)
+    // 1. Add state for the dynamic data you want to receive
+    const [reps, setReps] = useState(0);
+    const [feedback, setFeedback] = useState("🟢 Waiting for data...");
 
     const startStop = () => {
         if (!inProgress) {
             setTimestamp(0);
+            setReps(0); // Optional: reset reps on start
         }
         setInProgress(prev => !prev);
     };
@@ -41,20 +45,35 @@ export default function TrainWithPartner() {
         };
     }, [inProgress]);
 
+    // 2. Create a handler for incoming WebSocket data
+    const handleSocketData = (data) => {
+        if (data.reps !== undefined) {
+            setReps(data.reps);
+        }
+        if (data.feedback !== undefined) {
+            setFeedback(data.feedback);
+        }
+    };
+
     return (
         <Box className="train-with-partner">
             <Box className="camera-container">
-                <CameraView exercise={exercise} timestamp={timestamp} inProgress={inProgress}/>
-
-                <Box className="feedback">🟢 Good form</Box>
+                <CameraView
+                    exercise={exercise}
+                    timestamp={timestamp}
+                    inProgress={inProgress}
+                    onDataReceived={handleSocketData}
+                />
+e
+                <Box className="feedback">{feedback}</Box>
 
                 <Box className="reps-time">
-                    <p>Reps: 8</p>
+                    <p>Reps: {reps}</p>
                     <p>{formatTime(timestamp)}</p>
                 </Box>
             </Box>
             <Box>
-                <Button variant="outlined" className="startButton" onClick={() => startStop()}>
+                <Button variant="outlined" className="startButton" onClick={startStop}>
                     {inProgress ? 'Stop' : 'Start'}
                 </Button>
             </Box>
